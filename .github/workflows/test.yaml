@@ -1,0 +1,31 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v2
+
+      - name: Install clickhouse from local plugin
+        run: |
+          mise settings set experimental true
+          mise use "vfox:file://${{ github.workspace }}@25.3.9.72-lts"
+        env:
+          MISE_DEBUG: 1
+
+      - name: Verify clickhouse works
+        run: |
+          mise x "vfox:file://${{ github.workspace }}@25.3.9.72-lts" -- clickhouse --version
